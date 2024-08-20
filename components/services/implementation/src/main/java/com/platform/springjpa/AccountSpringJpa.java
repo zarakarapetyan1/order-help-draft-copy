@@ -18,35 +18,38 @@ public class AccountSpringJpa implements AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
+
     @Override
     public Account createAccount(Account account) {
-        AccountEntity accountEntity ;
-        if(account.getAccountId()!=null){
-            throw new AccountBadRequestException("Account ID must not be null");
+        AccountEntity accountEntity;
+
+        if (account.getAccountId() != null) {
+            throw new AccountBadRequestException("Account ID must be null");
         }
 
-        try{
+        try {
             accountEntity = accountRepository.getByAccountName(account.getAccountName());
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new AccountApiException("Problem during creating account");
         }
 
-        if(accountEntity!=null){
+        if (accountEntity != null) {
             throw new AccountAlreadyExistsException("Account already exists with given name");
         }
 
-         accountEntity =AccountEntity.builder()
-                 .accountName(account.getAccountName())
-                .accountType(account.getAccountType()).build();
-
-        try{
-            accountEntity= accountRepository.save(accountEntity);
-        }catch (Exception e){
+        try {
+            accountEntity = AccountEntity.builder()
+                    .accountName(account.getAccountName())
+                    .accountType(account.getAccountType())
+                    .build();
+            accountEntity = accountRepository.save(accountEntity);
+        } catch (Exception e) {
             throw new AccountApiException("Problem during creating account");
         }
 
         return accountEntity.toAccount();
     }
+
 
     @Override
     public Account getAccount(UUID accountId) {
@@ -71,6 +74,7 @@ public class AccountSpringJpa implements AccountService {
 
         return existingAccountEntity.toAccount();
     }
+
 
     @Override
     public void deleteAccount(UUID accountId) {

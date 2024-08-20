@@ -1,7 +1,6 @@
 package com.platform.springjpa;
 
 import com.platform.entity.AccountEntity;
-import com.platform.entity.AddressEntity;
 import com.platform.entity.UserEntity;
 import com.platform.exceptions.userExceptions.UserAlreadyExistException;
 import com.platform.exceptions.userExceptions.UserApiException;
@@ -31,7 +30,6 @@ public class UserSpringJpa implements UserService {
     private PasswordEncoder passwordEncoder;
 
 
-
     @Override
     public User getById(UUID userId) {
         Optional<UserEntity> optionalUser = userRepository.findById(userId);
@@ -45,6 +43,7 @@ public class UserSpringJpa implements UserService {
     public User createUser(User user) {
         UserEntity userEntity;
         Optional<AccountEntity> accountEntity;
+
         if (user.getUserId() != null) {
             throw new UserBadRequestException("User ID must be null");
         }
@@ -56,29 +55,30 @@ public class UserSpringJpa implements UserService {
         }
 
         if (userEntity != null) {
-            throw new UserAlreadyExistException("User already exist with given email");
+            throw new UserAlreadyExistException("User already exists with given email");
         }
 
-        try{
-             accountEntity = accountRepository.findById(user.getAccountId());
-        }catch (Exception e){
+        try {
+            accountEntity = accountRepository.findById(user.getAccountId());
+        } catch (Exception e) {
             throw new UserApiException("Problems occurred while creating user");
         }
 
-        if(accountEntity.isEmpty()){
+        if (accountEntity.isEmpty()) {
             throw new UserNotFoundException("Account not found with given ID");
         }
+
         try {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
             UserEntity newUserEntity = new UserEntity(user);
             newUserEntity.setAccountEntity(accountEntity.get());
-            userEntity=userRepository.save(newUserEntity);
+            userEntity = userRepository.save(newUserEntity);
         } catch (Exception ex) {
-            throw new UserApiException("problems occurred during creating user...");
-
+            throw new UserApiException("Problems occurred during creating user...");
         }
+
         return userEntity.toUser();
     }
+
 
     @Override
     public List<User> getUsers() {
@@ -109,53 +109,66 @@ public class UserSpringJpa implements UserService {
 
     @Override
     public User updateUser(UUID userId, User user) {
-        Optional<UserEntity> optionalUserEntity = userRepository.findById(userId);
-        if (optionalUserEntity.isEmpty()) {
+        Optional<UserEntity> userEntities;
+        UserEntity existingUser;
+
+        if (user.getUserId() != null && !user.getUserId().equals(userId)) {
+            throw new UserBadRequestException("ID of body doesn't match with URL parameter");
+        }
+
+        try {
+            userEntities = userRepository.findById(userId);
+            existingUser = userRepository.getByEmailAndUserIdNot(user.getEmail(), userId);
+        } catch (Exception e) {
+            throw new UserApiException("Problem during updating user");
+        }
+
+        if (userEntities.isEmpty()) {
             throw new UserNotFoundException("User not found with given ID");
         }
 
-        UserEntity existingUserEntity = optionalUserEntity.get();
-
-        if (user.getEmail() != null && !user.getEmail().equals(existingUserEntity.getEmail())) {
-            UserEntity userEntityByEmail = userRepository.getByEmail(user.getEmail());
-            if (userEntityByEmail != null) {
-                throw new UserAlreadyExistException("User already exists with given email");
-            }
+        if (existingUser != null) {
+            throw new UserAlreadyExistException("User already exists with given email.");
         }
 
-        if (user.getAccountId() != null) {
-            AccountEntity accountEntity = accountRepository.findById(user.getAccountId())
-                    .orElseThrow(() -> new UserNotFoundException("Account not found with given ID"));
-            existingUserEntity.setAccountEntity(accountEntity);
-        }
-
-        if (user.getAddress() != null) {
-            AddressEntity addressEntity = new AddressEntity(user.getAddress());
-            existingUserEntity.setAddressEntity(addressEntity);
-        }
-
-        existingUserEntity.setName(user.getName());
-        existingUserEntity.setSurname(user.getSurname());
-        existingUserEntity.setEmail(user.getEmail());
-        existingUserEntity.setPassword(passwordEncoder.encode(user.getPassword()));
+        AccountEntity account = getAccount(user.getAccountId());
+        User updatedUser;
 
         try {
-            existingUserEntity = userRepository.save(existingUserEntity);
-        } catch (Exception ex) {
-            throw new UserApiException("Problems occurred during updating user");
+            UserEntity userEntity = userEntities.get();
+            userEntity.setAccountEntity(account);
+            updatedUser = userRepository.save(userEntity).toUser();
+        } catch (Exception e) {
+            throw new UserApiException("Problem during updating user");
         }
 
-        return existingUserEntity.toUser();
+        return updatedUser;
     }
+
 
     @Override
     public void deleteUser(UUID userId) {
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with given ID"));
+        userRepository.findById(userId).orElseThrow(() ->
+                new UserNotFoundException("User not found with given ID"));
         try {
-            userRepository.delete(userEntity);
-        } catch (Exception ex) {
-            throw new UserApiException("Problems occurred during deleting user");
+            userRepository.deleteById(userId);
+        } catch (Exception e) {
+            throw new UserApiException("Problem during deleting user");
         }
     }
+
+    private AccountEntity getAccount(UUID accountId) {
+        Optional<AccountEntity> accountEntity;
+        try {
+            accountEntity = accountRepository.findById(accountId);
+        } catch (Exception e) {
+            throw new UserApiException("Problem during creating user");
+        }
+        if (accountEntity.isEmpty()) {
+            throw new UserNotFoundException("Account not found with given account ID");
+        }
+        return accountEntity.get();
+    }
+
+
 }
