@@ -48,6 +48,10 @@ public class UserSpringJpa implements UserService {
             throw new UserBadRequestException("User ID must be null");
         }
 
+        if(user.getPassword() != null) {
+            throw new UserBadRequestException("Password must be null");
+        }
+
         try {
             userEntity = userRepository.getByEmail(user.getEmail());
         } catch (Exception ex) {
@@ -112,6 +116,10 @@ public class UserSpringJpa implements UserService {
         Optional<UserEntity> userEntities;
         UserEntity existingUser;
 
+        if(user.getPassword() != null) {
+            throw new UserBadRequestException("Password must be null");
+        }
+        
         if (user.getUserId() != null && !user.getUserId().equals(userId)) {
             throw new UserBadRequestException("ID of body doesn't match with URL parameter");
         }

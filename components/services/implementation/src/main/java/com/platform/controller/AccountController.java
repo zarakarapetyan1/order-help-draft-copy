@@ -3,11 +3,13 @@ package com.platform.controller;
 
 import com.platform.constants.RoutConstants;
 import com.platform.model.Account;
+import com.platform.repository.AccountRepository;
 import com.platform.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -16,8 +18,10 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private AccountRepository accountRepository;
 
-    @PostMapping
+    @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public @ResponseBody Account create(@RequestBody Account account) {
 
@@ -35,6 +39,12 @@ public class AccountController {
     public @ResponseBody Account updateAccount(@PathVariable UUID id, @RequestBody Account account) {
         return accountService.updateAccount(id, account);
     }
+
+    @GetMapping
+    public @ResponseBody List<Account> getAll() {
+        return accountService.getAll();
+    }
+
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

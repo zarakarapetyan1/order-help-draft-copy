@@ -1,6 +1,5 @@
 package com.platform.exceptions;
 
-import lombok.extern.log4j.Log4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -58,5 +57,12 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
         }
         ExceptionResponse exceptionResponse = new ExceptionResponse("Invalid request", String.valueOf(HttpStatus.BAD_REQUEST.value()), details);
         return ResponseEntity.status(status).body(exceptionResponse);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public @ResponseBody
+    ResponseEntity<ExceptionResponse> handleForbiddenException(ForbiddenException exception) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(exception.getMessage(), String.valueOf(HttpStatus.FORBIDDEN.value()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exceptionResponse);
     }
 }

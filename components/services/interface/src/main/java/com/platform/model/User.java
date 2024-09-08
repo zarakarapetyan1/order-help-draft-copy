@@ -1,5 +1,6 @@
 package com.platform.model;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
@@ -44,6 +45,7 @@ public class User {
     @Pattern(regexp = EMAIL_REGEX)
     @Schema(description = "Email address of user", defaultValue = "jon@gmail.com")
     private String email;
+    @Hidden
     private String password;
     private UUID accountId;
     private Address address;

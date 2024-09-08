@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.freefair.lombok' version "${freefairLombokVersion}"
+
+}
+
+group = 'org.example'
+version='1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation project(":order-service-interface")
+    implementation project(":exceptions")
+
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$openapiVersion"
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+bootJar{
+    enabled=false
+}
+
+jar {
+    archiveClassifier = ""
+    archiveBaseName= 'security'
+}

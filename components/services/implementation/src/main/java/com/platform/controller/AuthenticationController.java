@@ -1,5 +1,6 @@
 package com.platform.controller;
 
+import com.platform.NoAuthorizationRequired;
 import com.platform.model.LoginRequest;
 import com.platform.service.TokenService;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -16,6 +17,7 @@ public class AuthenticationController {
     private TokenService tokenService;
 
     @RequestMapping(value = "/token", method = RequestMethod.POST)
+    @NoAuthorizationRequired
     public @ResponseBody String login(@RequestBody LoginRequest loginRequest) {
 
         return tokenService.getToken(loginRequest);

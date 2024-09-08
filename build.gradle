@@ -1,23 +1,25 @@
 plugins {
     id 'java'
-    id 'io.spring.dependency-management' version '1.1.0'
-    id 'org.springframework.boot' version '3.0.1'
+    id "com.avast.gradle.docker-compose" version "$avastDockerComposePluginVersion"
 }
 
 group = 'org.example'
-version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-
+task buildDockerImage(type: Exec){
+    mustRunAfter assemble
+    workingDir "${projectDir}"
+    commandLine "docker", "build", "--build-arg","FOUNDATION_BUILD_TAG=dev", "-f", "Dockerfile", "-t" , "order/help", "--pull=false" , "."
 }
 
-test {
-    useJUnitPlatform()
+task buildPostgresDockerImage(type: Exec) {
+    workingDir "${projectDir}/docker/postgres"
+    commandLine "docker", "build", "-t", "order/postgres:dev" , "--pull", "."
+}
+
+dockerCompose {
+    useComposeFiles = ['docker/docker-compose.yml']
 }

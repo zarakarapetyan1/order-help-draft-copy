@@ -2,6 +2,7 @@ package com.platform.service;
 
 import com.platform.model.Account;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface AccountService {
@@ -10,5 +11,6 @@ public interface AccountService {
     Account getAccount(UUID accountId);
     Account updateAccount(UUID accountId, Account account);
     void deleteAccount(UUID accountId);
+    List<Account> getAll();
 
 }

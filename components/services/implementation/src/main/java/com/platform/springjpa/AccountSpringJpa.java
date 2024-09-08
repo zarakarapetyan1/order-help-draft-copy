@@ -11,6 +11,8 @@ import com.platform.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -60,19 +62,31 @@ public class AccountSpringJpa implements AccountService {
 
     @Override
     public Account updateAccount(UUID accountId, Account account) {
-        AccountEntity existingAccountEntity = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found with given id"));
-
-        existingAccountEntity.setAccountName(account.getAccountName());
-        existingAccountEntity.setAccountType(account.getAccountType());
-
-        try {
-            existingAccountEntity = accountRepository.save(existingAccountEntity);
-        } catch (Exception e) {
+        if(account.getAccountId() != null && !accountId.equals(account.getAccountId())) {
+            throw new AccountBadRequestException("not match");
+        }
+        Optional<AccountEntity> accountEntities;
+        try{
+            accountEntities = accountRepository.findById(accountId);
+        }catch (Exception e) {
             throw new AccountApiException("Problem during updating account");
         }
+        if (accountEntities.isPresent()) {
+            throw new AccountAlreadyExistsException("Account not found with given id");
+        }
 
-        return existingAccountEntity.toAccount();
+        AccountEntity accountEntity=accountEntities.get();
+
+        AccountEntity existingAccount = accountRepository.
+                getByAccountNameAndAccountTypeAndAccountIdNot(account.getAccountName(), account.getAccountType(), accountId);
+
+        if (existingAccount != null) {
+            throw new AccountBadRequestException("Account already exists with given name an type");
+        }
+        accountEntity.setAccountName(account.getAccountName());
+        accountEntity.setAccountType(account.getAccountType());
+
+       return accountRepository.save(accountEntity).toAccount();
     }
 
 
@@ -86,6 +100,18 @@ public class AccountSpringJpa implements AccountService {
         } catch (Exception e) {
             throw new AccountApiException("Problem during deleting account");
         }
+    }
+
+    @Override
+    public List<Account> getAll() {
+        List<AccountEntity> accountEntities;
+        try {
+            accountEntities = accountRepository.findAll();
+        } catch (Exception e) {
+            throw new AccountApiException("Problem during getting account");
+        }
+
+        return accountEntities.stream().map(AccountEntity::toAccount).toList();
     }
 
 }
